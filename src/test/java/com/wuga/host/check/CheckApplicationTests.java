@@ -1,4 +1,4 @@
-package com.wuga.host.Check;
+package com.wuga.host.check;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

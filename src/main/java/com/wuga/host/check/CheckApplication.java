@@ -1,4 +1,4 @@
-package com.wuga.host.Check;
+package com.wuga.host.check;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
