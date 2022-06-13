@@ -46,13 +46,12 @@ public class HostServiceImpl implements HostService{
     @Async
     public void checkPings(HostsDTO all) throws InterruptedException {
 
-        log.info("checkPingsStart = {}", LocalDateTime.now());
         Thread.sleep(3000);
         try {
             InetAddress ip = InetAddress.getByName(all.getIp());
             boolean reachable = ip.isReachable(2000);
             if (reachable) {
-                log.info(ip.getHostName() + " = success");
+                log.info("success = {}", ip.getHostName());
             } else {
                 log.error("fail = {}", ip.getHostName());
                 Hosts hostsByIp = hostsEntityRepository.findByIp(all.getIp());
@@ -66,8 +65,6 @@ public class HostServiceImpl implements HostService{
 
     @Override
     public List<HostsDTO> findAll() {
-
-        log.info("findAll() 호출");
 
         List<Hosts> all = hostsEntityRepository.findAll();
         if (all.size() == 0) {
@@ -89,7 +86,6 @@ public class HostServiceImpl implements HostService{
     @Override
     public HostsDTO save(String hostName) throws UnknownHostException {
 
-        log.info("save() 호출");
         InetAddress ip;
         try {
             ip = InetAddress.getByName(hostName);
@@ -113,8 +109,6 @@ public class HostServiceImpl implements HostService{
     @Override
     public HostsDTO findByIp(String ip) {
 
-        log.info("findByIp() 호출");
-
         checkNotExist(ip);
         Hosts hosts = hostsEntityRepository.findByIp(ip);
 
@@ -123,8 +117,6 @@ public class HostServiceImpl implements HostService{
 
     @Override
     public HostsDTO update(String ip, HostsDTO hostsDTO) {
-
-        log.info("update() 호출");
 
         checkNotExist(ip);
         Hosts host = hostsEntityRepository.findByIp(ip);
@@ -143,7 +135,6 @@ public class HostServiceImpl implements HostService{
 
     private void checkNotExist(String ip) {
 
-        log.info("존재할때 수정,조회");
         if (!hostsEntityRepository.existsByIp(ip)) {
             throw new NoResultException("존재하지 않는 호스트입니다");
         }
@@ -151,7 +142,6 @@ public class HostServiceImpl implements HostService{
 
     private void check(String ip) {
 
-        log.info("존재하지않을때 삽입");
         if (hostsEntityRepository.existsByIp(ip)) {
             throw new ExistHostException("존재하는 호스트입니다");
         }

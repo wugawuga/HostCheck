@@ -1,5 +1,6 @@
 package com.wuga.host.check.exception;
 
+import javax.persistence.NoResultException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,5 +26,14 @@ public class ExceptionHandler {
         final ErrorResponse response = new ErrorResponse(e.getMessage(), HttpStatus.CONFLICT);
 
         return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+    }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(NoResultException.class)
+    protected ResponseEntity<ErrorResponse> handleNoResultException(NoResultException e) {
+
+        log.error("ExistHostException - {}", e.getMessage());
+        final ErrorResponse response = new ErrorResponse(e.getMessage(), HttpStatus.NOT_FOUND);
+
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 }
