@@ -1,27 +1,68 @@
 package com.wuga.host.check.service;
 
-import static com.wuga.host.check.domain.Hosts.*;
+import static com.wuga.host.check.domain.Hosts.createHosts;
 
+import com.wuga.host.check.domain.AliveStatus;
 import com.wuga.host.check.domain.Hosts;
 import com.wuga.host.check.domain.HostsDTO;
+import com.wuga.host.check.exception.DoNotCreateAboveException;
 import com.wuga.host.check.exception.ExistHostException;
-import com.wuga.host.check.exception.NotResponseException;
 import com.wuga.host.check.repository.HostsEntityRepository;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.persistence.NoResultException;
+import javax.servlet.http.HttpSession;
+import javax.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @RequiredArgsConstructor
 @Component
 @Slf4j
+@Transactional
 public class HostServiceImpl implements HostService{
 
     private final HostsEntityRepository hostsEntityRepository;
+    private final HttpSession session;
+
+    @Override
+    public Long count() {
+        if (session.getAttribute("count") == null) {
+            return 0L;
+        } else if ((Long)session.getAttribute("count") >= 2L) {
+            throw new DoNotCreateAboveException("100개 초과! 등록할 수 없습니다");
+        }
+        return hostsEntityRepository.count();
+    }
+
+    @Override
+    @Async
+    public void checkPings(HostsDTO all) throws InterruptedException {
+
+        log.info("checkPingsStart = {}", LocalDateTime.now());
+        Thread.sleep(3000);
+        try {
+            InetAddress ip = InetAddress.getByName(all.getIp());
+            boolean reachable = ip.isReachable(2000);
+            if (reachable) {
+                log.info(ip.getHostName() + " = success");
+            } else {
+                log.error("fail = {}", ip.getHostName());
+                Hosts hostsByIp = hostsEntityRepository.findByIp(all.getIp());
+                hostsByIp.updateAliveHosts();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
 
     @Override
     public List<HostsDTO> findAll() {
@@ -32,28 +73,39 @@ public class HostServiceImpl implements HostService{
         if (all.size() == 0) {
             throw new NoResultException("등록된 호스트가 없습니다");
         }
-        List<HostsDTO> allDTO = all.stream().map(hosts -> new HostsDTO(
-            hosts.getIp(),
-            hosts.getName())).collect(Collectors.toList());
+        List<HostsDTO> allDTO = all.stream()
+            .map(hosts -> new HostsDTO(
+                hosts.getId(),
+                hosts.getIp(),
+                hosts.getName(),
+                hosts.getRegistrationTime().format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm")),
+                hosts.getUpdateTime().format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm")),
+                hosts.getStatus()))
+            .collect(Collectors.toList());
+
         return allDTO;
     }
 
     @Override
-    public HostsDTO save() throws IOException {
+    public HostsDTO save(String hostName) throws UnknownHostException {
 
         log.info("save() 호출");
-
-
-        InetAddress ip = InetAddress.getLocalHost();
-
-        if (ip.isReachable(1000)) {
-            log.info("Reachable = {}", ip.getHostName());
-        } else {
-            log.error("UnReachable = {}", ip.getHostAddress());
-            throw new NotResponseException("응답이 없습니다");
+        InetAddress ip;
+        try {
+            ip = InetAddress.getByName(hostName);
+        } catch (UnknownHostException e) {
+            throw new UnknownHostException("존재하지 않는 도메인입니다");
         }
         check(ip.getHostAddress());
-        Hosts hosts = hostsEntityRepository.save(createHosts(ip.getHostAddress(), ip.getHostName()));
+        Hosts hosts = hostsEntityRepository.save(
+            createHosts(
+                ip.getHostAddress(),
+                ip.getHostName(),
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                AliveStatus.CONNECTED
+            ));
+
 
         return changeDTO(hosts);
     }
@@ -76,10 +128,10 @@ public class HostServiceImpl implements HostService{
 
         checkNotExist(ip);
         Hosts host = hostsEntityRepository.findByIp(ip);
-        host.updateHosts(hostsDTO.getIp(), hostsDTO.getName());
-        Hosts updateHost = hostsEntityRepository.save(host);
 
-        return changeDTO(updateHost);
+        host.updateHosts(hostsDTO);
+
+        return changeDTO(host);
     }
 
     @Override
@@ -107,6 +159,20 @@ public class HostServiceImpl implements HostService{
 
     private HostsDTO changeDTO(Hosts hosts) {
 
-        return new HostsDTO(hosts.getIp(), hosts.getName());
+        return new HostsDTO(
+            hosts.getId(),
+            hosts.getIp(),
+            hosts.getName(),
+            hosts.getRegistrationTime().format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm")),
+            hosts.getUpdateTime().format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm")),
+            hosts.getStatus()
+        );
     }
+
+    @Override
+    public Long countForSchedule() {
+
+        return hostsEntityRepository.count();
+    }
+
 }

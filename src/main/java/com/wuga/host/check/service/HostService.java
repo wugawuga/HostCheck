@@ -1,8 +1,7 @@
 package com.wuga.host.check.service;
 
-import com.wuga.host.check.domain.Hosts;
 import com.wuga.host.check.domain.HostsDTO;
-import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
@@ -11,11 +10,17 @@ public interface HostService {
 
     List<HostsDTO> findAll();
 
-    HostsDTO save() throws IOException;
+    HostsDTO save(String hostName) throws UnknownHostException;
 
     HostsDTO findByIp(String ip);
 
     HostsDTO update(String ip, HostsDTO hostsDTO);
 
     void deleteByIp(String ip);
+
+    Long count();
+
+    void checkPings(HostsDTO all) throws InterruptedException;
+
+    Long countForSchedule();
 }
