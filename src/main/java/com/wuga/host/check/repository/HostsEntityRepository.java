@@ -1,7 +1,6 @@
 package com.wuga.host.check.repository;
 
 import com.wuga.host.check.domain.Hosts;
-import java.util.Optional;
 import javax.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -15,4 +14,6 @@ public interface HostsEntityRepository extends JpaRepository<Hosts, Long> {
     Hosts findByIp(String ip);
 
     void deleteByIp(String ip);
+
+    boolean existsByName(String hostName);
 }

@@ -36,7 +36,7 @@ public class HostServiceImpl implements HostService{
     public Long count() {
         if (session.getAttribute("count") == null) {
             return 0L;
-        } else if ((Long)session.getAttribute("count") >= 2L) {
+        } else if ((Long)session.getAttribute("count") >= 100L) {
             throw new DoNotCreateAboveException("100개 초과! 등록할 수 없습니다");
         }
         return hostsEntityRepository.count();
@@ -92,7 +92,7 @@ public class HostServiceImpl implements HostService{
         } catch (UnknownHostException e) {
             throw new UnknownHostException("존재하지 않는 도메인입니다");
         }
-        check(ip.getHostAddress());
+        check(ip.getHostAddress(), hostName);
         Hosts hosts = hostsEntityRepository.save(
             createHosts(
                 ip.getHostAddress(),
@@ -140,9 +140,11 @@ public class HostServiceImpl implements HostService{
         }
     }
 
-    private void check(String ip) {
+    private void check(String ip, String hostName) {
 
         if (hostsEntityRepository.existsByIp(ip)) {
+            throw new ExistHostException("존재하는 호스트입니다");
+        }else if (hostsEntityRepository.existsByName(hostName)) {
             throw new ExistHostException("존재하는 호스트입니다");
         }
     }

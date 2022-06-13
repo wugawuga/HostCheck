@@ -46,7 +46,7 @@ public class CheckController {
     public ResponseEntity<?> saveHost(@RequestParam("hostName") String hostName)
         throws RuntimeException, UnknownHostException {
 
-        session.setAttribute("count", hostServiceImpl.count() + 1);
+        session.setAttribute("count", hostServiceImpl.count());
 
         HostsDTO result = hostServiceImpl.save(hostName);
 
