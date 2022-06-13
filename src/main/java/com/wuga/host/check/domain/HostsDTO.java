@@ -5,11 +5,22 @@ import lombok.Getter;
 @Getter
 public class HostsDTO {
 
+    private Long id;
+
     private String ip;
     private String name;
+    private String registrationTime;
+    private String updateTime;
 
-    public HostsDTO(String ip, String name) {
+    private AliveStatus status;
+
+    public HostsDTO(Long id, String ip, String name, String registrationTime, String updateTime, AliveStatus status) {
+        this.id = id;
         this.ip = ip;
         this.name = name;
+        this.registrationTime = registrationTime;
+        this.updateTime = updateTime;
+        this.status = status;
     }
+
 }
