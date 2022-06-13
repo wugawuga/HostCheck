@@ -4,6 +4,7 @@
 - MariaDB 10.0
 - Jpa
 - Gradle 7.4.1
+- Docker 2.6.0
 
 # REST API
 
