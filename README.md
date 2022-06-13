@@ -1,4 +1,11 @@
 # REST API
+- Java 11
+- Springboot 2.7.0
+- MariaDB 10.0
+- Jpa
+- Gradle 7.4.1
+
+# REST API
 
 REST API ex)...
 
