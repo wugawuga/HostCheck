@@ -1,4 +1,4 @@
-# REST API
+# Settings
 - Java 11
 - Springboot 2.7.0
 - MariaDB 10.0
