@@ -43,7 +43,7 @@ public class HostServiceImpl implements HostService{
     }
 
     @Override
-    @Async
+    @Async("threadPoolTaskExecutor")
     public void checkPings(HostsDTO all) throws InterruptedException {
 
         Thread.sleep(3000);
